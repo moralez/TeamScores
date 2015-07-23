@@ -14,6 +14,8 @@ import rentpath.teamscores.fragment.SessionFragment;
  */
 public class SessionActivity extends FragmentActivity {
 
+    public static final String SESSION_VIEW_JSON = "session_view_json";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

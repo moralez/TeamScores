@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -26,15 +27,27 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import rentpath.teamscores.R;
+import rentpath.teamscores.model.SessionViewer;
 
 /**
  * A login screen that offers login via email/password.
  */
 public class StartSessionActivity extends Activity implements LoaderCallbacks<Cursor> {
+
+    private static final String TAG = StartSessionActivity.class.toString();
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -53,7 +66,11 @@ public class StartSessionActivity extends Activity implements LoaderCallbacks<Cu
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    private boolean mDebugging = true;
+    private boolean mDebugging = false;
+
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private final OkHttpClient client = new OkHttpClient();
+    private final Gson gson = new Gson();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,11 +116,6 @@ public class StartSessionActivity extends Activity implements LoaderCallbacks<Cu
      * errors are presented and no actual login attempt is made.
      */
     public void attemptLogin() {
-        if (mDebugging) {
-            Intent sessionActivity = new Intent(this, SessionActivity.class);
-            startActivity(sessionActivity);
-            return;
-        }
 
         if (mAuthTask != null) {
             return;
@@ -255,7 +267,7 @@ public class StartSessionActivity extends Activity implements LoaderCallbacks<Cu
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    public class UserLoginTask extends AsyncTask<Void, Void, String> {
 
         private final String mEmail;
         private final String mPassword;
@@ -266,35 +278,50 @@ public class StartSessionActivity extends Activity implements LoaderCallbacks<Cu
         }
 
         @Override
-        protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
+        protected String doInBackground(Void... params) {
 
+            String json = "{\"session_key\": \"jQaEYGyur87LtuUduajtFg\", \"session_password\": \"ULeRQCX8uVfEViRfdJxz2g\", \"viewer_name\": \"Jeremy Fox\"}";
+            String url = "http://teamscor.es/auth_viewer.json";
+
+            RequestBody body = RequestBody.create(JSON, json);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .build();
+
+            Response response = null;
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
+                response = client.newCall(request).execute();
+                return response.body().string();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
-            return true;
+            return "";
         }
 
         @Override
-        protected void onPostExecute(final Boolean success) {
+        protected void onPostExecute(final String response) {
             mAuthTask = null;
             showProgress(false);
 
-            if (success) {
-                finish();
+            if (response.length() > 0) {
+                Log.i(TAG, response);
+
+                String blah = "{\n" +
+                        "\"id\":3,\n" +
+                        "\"viewer_name\":\"Jeremy Foxxx\",\n" +
+                        "\"scoring_session_id\":1,\n" +
+                        "\"created_at\":\"2015-07-22T21:57:19.301Z\",\n" +
+                        "\"updated_at\":\"2015-07-22T21:57:19.301Z\"\n" +
+                        "}";
+                Gson gson = new GsonBuilder().create();
+                SessionViewer sessionViewer = gson.fromJson(blah, SessionViewer.class);
+                Log.i(TAG, sessionViewer.toString());
+
+                Intent sessionActivity = new Intent(StartSessionActivity.this, SessionActivity.class);
+                sessionActivity.putExtra(SessionActivity.SESSION_VIEW_JSON, sessionViewer);
+                startActivity(sessionActivity);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
