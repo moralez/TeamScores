@@ -7,8 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -21,7 +20,6 @@ import com.squareup.okhttp.Response;
 import java.io.IOException;
 
 import rentpath.teamscores.R;
-import rentpath.teamscores.adapter.ScoreAdapter;
 import rentpath.teamscores.model.SessionInfo;
 
 /**
@@ -39,11 +37,11 @@ public class SessionFragment extends Fragment {
     private TextView mStoryTitle;
     private TextView mStoryRequester;
     private TextView mStoryLabels;
+    private TextView mStoryDescription;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-//        scoring/jQaEYGyur87LtuUduajtFg.json
     }
 
     @Override
@@ -54,20 +52,63 @@ public class SessionFragment extends Fragment {
         mStoryTitle = (TextView)view.findViewById(R.id.story_title);
         mStoryRequester = (TextView)view.findViewById(R.id.story_requester);
         mStoryLabels = (TextView)view.findViewById(R.id.story_labels);
+        mStoryDescription = (TextView)view.findViewById(R.id.story_description);
 
-        final GridView scoreGridView = (GridView)view.findViewById(R.id.score_gridview);
-        scoreGridView.setAdapter(new ScoreAdapter(getActivity()));
+        SeekBar seekBar = (SeekBar)view.findViewById(R.id.story_estimate_slider);
+        seekBar.setProgress(0);
+        seekBar.incrementProgressBy(1);
+        seekBar.setMax(10);
 
-        scoreGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                int scoreValue = ScoreAdapter.mScoreValues[position];
-                if ((scoreValue == Integer.MIN_VALUE) ||
-                    (scoreValue == Integer.MAX_VALUE)) {
-                    mSubmittedScoreTV.setText("?");
-                } else {
-                    mSubmittedScoreTV.setText(Integer.toString(scoreValue));
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                switch (progress) {
+                    case 0:
+                    default:
+                        mSubmittedScoreTV.setText("?");
+                        break;
+                    case 1:
+                        mSubmittedScoreTV.setText("0");
+                        break;
+                    case 2:
+                        mSubmittedScoreTV.setText("1");
+                        break;
+                    case 3:
+                        mSubmittedScoreTV.setText("2");
+                        break;
+                    case 4:
+                        mSubmittedScoreTV.setText("3");
+                        break;
+                    case 5:
+                        mSubmittedScoreTV.setText("5");
+                        break;
+                    case 6:
+                        mSubmittedScoreTV.setText("8");
+                        break;
+                    case 7:
+                        mSubmittedScoreTV.setText("13");
+                        break;
+                    case 8:
+                        mSubmittedScoreTV.setText("20");
+                        break;
+                    case 9:
+                        mSubmittedScoreTV.setText("40");
+                        break;
+                    case 10:
+                        mSubmittedScoreTV.setText("100");
+                        break;
                 }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
             }
         });
 
@@ -85,7 +126,9 @@ public class SessionFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
 
-            String url = "http://teamscor.es/scoring/jQaEYGyur87LtuUduajtFg.json";
+//            String url = "http://teamscor.es/scoring/jQaEYGyur87LtuUduajtFg.json";
+//            String url = "http://teamscor.es/scoring/tV0QtgFtO-qSy--4cSWe0Q.json";
+            String url = "http://teamscor.es/scoring/JVZuC1VbQBerXyGxZhDT0w.json";
 
             Request request = new Request.Builder()
                     .url(url).get().build();
@@ -124,11 +167,13 @@ public class SessionFragment extends Fragment {
                         "      \"project_id\":1054874,\n" +
                         "      \"name\":\"Adding Star Ratings to Listed properties on SRP and Map View\",\n" +
                         "      \"labels\":\"ag-ios,cr3,rent-ios\",\n" +
-                        "      \"requested_by\":\"Dustin Guinee\"\n" +
+                        "      \"requested_by\":\"Dustin Guinee\",\n" +
+                        "      \"description\":\"Given that I'm on Map View or SRP\\nI need to see the properties ratings\\nSo I decide better on my selection\\n\\nAC\\n\\n- Include the star rating per listed property\\n- If there are no star ratings, then this feature should no be displayed \\n- Star assets should be 2px apart and on the same row as the beds info.\n\n\n\n\n\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"\n" +
                         "   }\n" +
                         "}";
                 Gson gson = new GsonBuilder().create();
-                final SessionInfo sessionInfo = gson.fromJson(blah, SessionInfo.class);
+//                final SessionInfo sessionInfo = gson.fromJson(blah, SessionInfo.class);
+                final SessionInfo sessionInfo = gson.fromJson(response, SessionInfo.class);
                 Log.i(TAG, sessionInfo.toString());
 
                 getActivity().runOnUiThread(new Runnable() {
@@ -137,6 +182,7 @@ public class SessionFragment extends Fragment {
                         mStoryTitle.setText(sessionInfo.getStory().getName());
                         mStoryRequester.setText(sessionInfo.getStory().getRequested_by());
                         mStoryLabels.setText(sessionInfo.getStory().getLabels());
+                        mStoryDescription.setText(sessionInfo.getStory().getDescription());
                     }
                 });
             } else {

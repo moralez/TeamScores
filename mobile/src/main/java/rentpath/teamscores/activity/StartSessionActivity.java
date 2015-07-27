@@ -271,7 +271,7 @@ public class StartSessionActivity extends Activity implements LoaderCallbacks<Cu
         @Override
         protected String doInBackground(Void... params) {
 
-            String json = "{\"session_key\": \"jQaEYGyur87LtuUduajtFg\", \"session_password\": \"ULeRQCX8uVfEViRfdJxz2g\", \"viewer_name\": \"Jeremy Fox\"}";
+            String json = "{\"session_key\": \"JVZuC1VbQBerXyGxZhDT0w\", \"session_password\": \"l07B6vIpLu3sWhOA8pmLpQ\", \"viewer_name\": \"Chip Douglas\"}";
             String url = "http://teamscor.es/auth_viewer.json";
 
             RequestBody body = RequestBody.create(JSON, json);
